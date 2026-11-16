@@ -1,0 +1,17 @@
+# build outputs
+[Bb]in/
+[Oo]bj/
+[Aa]rtifacts/
+
+# visual studio / VS Code
+.vs/
+.idea/
+*.user
+*.suo
+
+# operating system
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
