@@ -99,14 +99,50 @@ public class OllamaEndpointResolverTests
     }
 
     [Fact]
-    public void Resolve_reports_a_corrupt_settings_file_when_it_is_the_active_source()
+    public void Resolve_uses_default_with_warning_when_settings_file_is_corrupt()
     {
         var settings = UserSettingsLoadResult.Failed("ユーザー設定ファイルのJSONを読み取れません");
 
         var resolution = OllamaEndpointResolver.Resolve([], null, settings);
 
-        Assert.False(resolution.IsSuccess);
-        Assert.Equal(settings.Error, resolution.Error);
+        Assert.True(resolution.IsSuccess);
+        Assert.Equal(
+            OllamaEndpointResolver.DefaultBaseAddress,
+            resolution.BaseAddress);
+        Assert.Null(resolution.Error);
+        Assert.Equal(settings.Error, resolution.Warning);
+    }
+
+    [Fact]
+    public void Resolve_ignores_corrupt_settings_file_when_argument_is_valid()
+    {
+        var resolution = OllamaEndpointResolver.Resolve(
+            ["--ollama-base-url", "http://192.0.2.10:11434"],
+            null,
+            UserSettingsLoadResult.Failed("壊れている"));
+
+        Assert.True(resolution.IsSuccess);
+        Assert.Equal(
+            "http://192.0.2.10:11434/",
+            resolution.BaseAddress!.AbsoluteUri);
+        Assert.Null(resolution.Warning);
+    }
+
+    [Fact]
+    public void Resolve_uses_default_with_warning_when_settings_url_is_invalid()
+    {
+        var resolution = OllamaEndpointResolver.Resolve(
+            [],
+            null,
+            UserSettingsLoadResult.Loaded("ftp://10.0.0.8:11434/"));
+
+        Assert.True(resolution.IsSuccess);
+        Assert.Equal(
+            OllamaEndpointResolver.DefaultBaseAddress,
+            resolution.BaseAddress);
+        Assert.Null(resolution.Error);
+        Assert.NotNull(resolution.Warning);
+        Assert.Contains("ユーザー設定 ollamaBaseUrl", resolution.Warning);
     }
 
     [Fact]
