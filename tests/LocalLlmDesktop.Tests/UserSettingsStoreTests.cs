@@ -234,4 +234,42 @@ public class UserSettingsStoreTests
             Directory.Delete(tempDirectory, recursive: true);
         }
     }
+
+        [Fact]
+    public void Load_returns_settings_when_ollama_base_url_is_null()
+    {
+        // Arrange
+        var tempDirectory = Path.Combine(
+            Path.GetTempPath(),
+            Guid.NewGuid().ToString());
+
+        Directory.CreateDirectory(tempDirectory);
+
+        var settingsPath = Path.Combine(tempDirectory, "settings.json");
+
+        try
+        {
+            File.WriteAllText(
+                settingsPath,
+                """
+                {
+                    "ollamaBaseUrl": null
+                }
+                """);
+
+            var store = new UserSettingsStore(settingsPath);
+
+            // Act
+            var result = store.Load();
+
+            // Assert
+            Assert.True(result.Exists);
+            Assert.Null(result.OllamaBaseUrl);
+            Assert.Null(result.Error);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
 }
