@@ -14,14 +14,26 @@ public partial class MainViewModel : ViewModelBase
     private readonly IChatService _chatService;
     private readonly string? _configurationError;
 
+    [ObservableProperty]
+    private string? _configurationWarning;
+
     public ObservableCollection<ChatMessage> Messages { get; } = new();
 
-    public MainViewModel(IChatService chatService, string? configurationError = null)
+    public MainViewModel(
+        IChatService chatService,
+        string? configurationError = null,
+        string? configurationWarning = null)
     {
         _chatService = chatService;
+
         _configurationError = string.IsNullOrWhiteSpace(configurationError)
             ? null
             : configurationError;
+
+        ConfigurationWarning = string.IsNullOrWhiteSpace(configurationWarning)
+            ? null
+            : configurationWarning;
+
         if (_configurationError is not null)
         {
             StatusText = _configurationError;

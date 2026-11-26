@@ -30,6 +30,9 @@
         <Button Content="送信"
                 Command="{Binding SendMessageCommand}"
                 HorizontalAlignment="Left" />
+                
+        <TextBlock Text="{Binding ConfigurationWarning}"
+           TextWrapping="Wrap" />
 
         <TextBlock Text="{Binding StatusText}" />
 

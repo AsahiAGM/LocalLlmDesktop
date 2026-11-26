@@ -31,13 +31,18 @@ public partial class App : Application
             {
                 _httpClient = OllamaHttpClientFactory.Create(resolution.BaseAddress!);
                 chatService = new OllamaService(_httpClient);
-                viewModel = new MainViewModel(chatService);
+                viewModel = new MainViewModel(
+                                chatService,
+                                configurationWarning: resolution.Warning);  
                 desktop.Exit += (_, _) => _httpClient.Dispose();
             }
             else
             {
                 chatService = new UnavailableChatService(resolution.Error!);
-                viewModel = new MainViewModel(chatService, resolution.Error);
+                viewModel = new MainViewModel(
+                                chatService,
+                                configurationError: resolution.Error,
+                                configurationWarning: resolution.Warning);
             }
 
             desktop.MainWindow = new MainWindow
