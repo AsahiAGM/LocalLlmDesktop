@@ -1,4 +1,5 @@
 using LocalLlmDesktop.Services;
+using Xunit;
 
 namespace LocalLlmDesktop.Tests;
 
