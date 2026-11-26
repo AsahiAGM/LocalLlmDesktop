@@ -146,6 +146,52 @@ public class OllamaEndpointResolverTests
     }
 
     [Fact]
+    public void Resolve_does_not_set_warning_when_settings_url_is_valid()
+    {
+        var resolution = OllamaEndpointResolver.Resolve(
+            [],
+            null,
+            UserSettingsLoadResult.Loaded("http://10.0.0.8:11434/"));
+
+        Assert.True(resolution.IsSuccess);
+        Assert.Null(resolution.Error);
+        Assert.Null(resolution.Warning);
+    }
+
+    [Fact]
+    public void Resolve_does_not_fall_back_when_argument_value_is_invalid()
+    {
+        var resolution = OllamaEndpointResolver.Resolve(
+            ["--ollama-base-url", "ftp://192.0.2.10:11434"],
+            "http://127.0.0.1:11434/",
+            UserSettingsLoadResult.Loaded("http://10.0.0.8:11434/"));
+
+        Assert.False(resolution.IsSuccess);
+        Assert.Null(resolution.BaseAddress);
+        Assert.NotNull(resolution.Error);
+        Assert.Contains("起動引数 --ollama-base-url", resolution.Error);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Resolve_uses_default_without_warning_when_settings_url_is_empty(string? raw)
+    {
+        var resolution = OllamaEndpointResolver.Resolve(
+            [],
+            null,
+            UserSettingsLoadResult.Loaded(raw));
+
+        Assert.True(resolution.IsSuccess);
+        Assert.Equal(
+            OllamaEndpointResolver.DefaultBaseAddress,
+            resolution.BaseAddress);
+        Assert.Null(resolution.Error);
+        Assert.Null(resolution.Warning);
+    }
+
+    [Fact]
     public void Resolve_ignores_a_corrupt_settings_file_when_the_environment_is_valid()
     {
         var resolution = OllamaEndpointResolver.Resolve(
