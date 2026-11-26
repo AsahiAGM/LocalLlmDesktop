@@ -132,4 +132,36 @@ public class UserSettingsStoreTests
             Directory.Delete(tempDirectory, recursive: true);
         }
     }
+        [Fact]
+    public void Load_returns_error_when_file_contains_json_null()
+    {
+        // Arrange
+        var tempDirectory = Path.Combine(
+            Path.GetTempPath(),
+            Guid.NewGuid().ToString());
+
+        Directory.CreateDirectory(tempDirectory);
+
+        var settingsPath = Path.Combine(tempDirectory, "settings.json");
+
+        try
+        {
+            File.WriteAllText(settingsPath, "null");
+
+            var store = new UserSettingsStore(settingsPath);
+
+            // Act
+            var result = store.Load();
+
+            // Assert
+            Assert.True(result.Exists);
+            Assert.Null(result.OllamaBaseUrl);
+            Assert.NotNull(result.Error);
+            Assert.Contains("内容が空です", result.Error);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
 }
