@@ -23,23 +23,41 @@ public partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            _httpClient = new HttpClient
+            var resolution = ResolveOllamaEndpoint();
+            IChatService chatService;
+            MainViewModel viewModel;
+
+            if (resolution.IsSuccess)
             {
-                BaseAddress = new Uri("http://127.0.0.1:11434/")
-            };
-
-            IChatService chatService = new OllamaService(_httpClient);
-
-            var viewModel = new MainViewModel(chatService);
+                _httpClient = OllamaHttpClientFactory.Create(resolution.BaseAddress!);
+                chatService = new OllamaService(_httpClient);
+                viewModel = new MainViewModel(chatService);
+                desktop.Exit += (_, _) => _httpClient.Dispose();
+            }
+            else
+            {
+                chatService = new UnavailableChatService(resolution.Error!);
+                viewModel = new MainViewModel(chatService, resolution.Error);
+            }
 
             desktop.MainWindow = new MainWindow
             {
                 DataContext = viewModel,
             };
-
-            desktop.Exit += (_, _) => _httpClient.Dispose();
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static OllamaEndpointResolution ResolveOllamaEndpoint()
+    {
+        var commandLine = Environment.GetCommandLineArgs();
+        var args = commandLine.Length > 0
+            ? commandLine[1..]
+            : [];
+        var environmentValue = Environment.GetEnvironmentVariable(
+            OllamaEndpointResolver.EnvironmentVariableName);
+        var settings = new UserSettingsStore().Load();
+        return OllamaEndpointResolver.Resolve(args, environmentValue, settings);
     }
 }

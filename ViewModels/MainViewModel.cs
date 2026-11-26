@@ -12,12 +12,20 @@ namespace LocalLlmDesktop.ViewModels;
 public partial class MainViewModel : ViewModelBase
 {
     private readonly IChatService _chatService;
+    private readonly string? _configurationError;
 
     public ObservableCollection<ChatMessage> Messages { get; } = new();
 
-    public MainViewModel(IChatService chatService)
+    public MainViewModel(IChatService chatService, string? configurationError = null)
     {
         _chatService = chatService;
+        _configurationError = string.IsNullOrWhiteSpace(configurationError)
+            ? null
+            : configurationError;
+        if (_configurationError is not null)
+        {
+            StatusText = _configurationError;
+        }
     }
 
     [ObservableProperty]
@@ -44,7 +52,9 @@ public partial class MainViewModel : ViewModelBase
 
     private bool CanSendMessage()
     {
-        return !IsBusy && !string.IsNullOrWhiteSpace(InputText);
+        return _configurationError is null
+            && !IsBusy
+            && !string.IsNullOrWhiteSpace(InputText);
     }
 
     [RelayCommand(CanExecute = nameof(CanSendMessage))]

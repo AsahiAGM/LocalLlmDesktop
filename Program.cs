@@ -1,4 +1,5 @@
 ﻿using Avalonia;
+using LocalLlmDesktop.Services;
 using System;
 
 namespace LocalLlmDesktop;
@@ -10,7 +11,8 @@ sealed class Program
     // yet and stuff might break.
     [STAThread]
     public static void Main(string[] args) => BuildAvaloniaApp()
-        .StartWithClassicDesktopLifetime(args);
+        .StartWithClassicDesktopLifetime(
+            OllamaEndpointResolver.ExcludeOwnArguments(args));
 
     // Avalonia configuration, don't remove; also used by visual designer.
     public static AppBuilder BuildAvaloniaApp()
