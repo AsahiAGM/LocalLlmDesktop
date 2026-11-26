@@ -100,7 +100,7 @@ public class UserSettingsStoreTests
         }
     }
 
-        [Fact]
+    [Fact]
     public void Load_returns_error_when_file_is_empty()
     {
         // Arrange
@@ -132,7 +132,8 @@ public class UserSettingsStoreTests
             Directory.Delete(tempDirectory, recursive: true);
         }
     }
-        [Fact]
+
+    [Fact]
     public void Load_returns_error_when_file_contains_json_null()
     {
         // Arrange
@@ -165,7 +166,7 @@ public class UserSettingsStoreTests
         }
     }
 
-        [Fact]
+    [Fact]
     public void Load_returns_settings_when_json_has_no_ollama_base_url()
     {
         // Arrange
@@ -197,7 +198,7 @@ public class UserSettingsStoreTests
         }
     }
 
-        [Fact]
+    [Fact]
     public void Load_returns_settings_when_ollama_base_url_is_empty()
     {
         // Arrange
@@ -235,7 +236,7 @@ public class UserSettingsStoreTests
         }
     }
 
-        [Fact]
+    [Fact]
     public void Load_returns_settings_when_ollama_base_url_is_null()
     {
         // Arrange
@@ -271,5 +272,78 @@ public class UserSettingsStoreTests
         {
             Directory.Delete(tempDirectory, recursive: true);
         }
+    }
+
+        [Fact]
+    public void BuildSettingsPath_returns_windows_path_when_windows_is_true()
+    {
+        // Arrange
+        var localAppData = @"C:\Users\Test\AppData\Local";
+        var xdgConfigHome = "/home/test/.config";
+        var home = "/home/test";
+
+        // Act
+        var result = UserSettingsStore.BuildSettingsPath(
+            windows: true,
+            localAppData: localAppData,
+            xdgConfigHome: xdgConfigHome,
+            home: home);
+
+        // Assert
+        var expected = Path.Combine(
+            localAppData,
+            "LocalLlmDesktop",
+            "settings.json");
+
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void BuildSettingsPath_returns_xdg_path_when_xdg_config_home_is_set()
+    {
+        // Arrange
+        var localAppData = "/unused";
+        var xdgConfigHome = "/home/test/.config";
+        var home = "/home/test";
+
+        // Act
+        var result = UserSettingsStore.BuildSettingsPath(
+            windows: false,
+            localAppData: localAppData,
+            xdgConfigHome: xdgConfigHome,
+            home: home);
+
+        // Assert
+        var expected = Path.Combine(
+            xdgConfigHome,
+            "LocalLlmDesktop",
+            "settings.json");
+
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void BuildSettingsPath_returns_home_config_path_when_xdg_config_home_is_not_set()
+    {
+        // Arrange
+        var localAppData = "/unused";
+        string? xdgConfigHome = null;
+        var home = "/home/test";
+
+        // Act
+        var result = UserSettingsStore.BuildSettingsPath(
+            windows: false,
+            localAppData: localAppData,
+            xdgConfigHome: xdgConfigHome,
+            home: home);
+
+        // Assert
+        var expected = Path.Combine(
+            home,
+            ".config",
+            "LocalLlmDesktop",
+            "settings.json");
+
+        Assert.Equal(expected, result);
     }
 }
