@@ -34,14 +34,23 @@ public static class OllamaEndpointResolver
 
         if (settings.Error is not null)
         {
-            return OllamaEndpointResolution.Failure(settings.Error);
+            return OllamaEndpointResolution.Success(
+                DefaultBaseAddress,
+                settings.Error);
         }
 
         if (!string.IsNullOrWhiteSpace(settings.OllamaBaseUrl))
         {
-            return Normalize(
+            if (!TryCreateBaseAddress(
                 settings.OllamaBaseUrl,
-                "ユーザー設定 ollamaBaseUrl");
+                out var settingsAddress))
+            {
+                return OllamaEndpointResolution.Success(
+                    DefaultBaseAddress,
+                    "ユーザー設定 ollamaBaseUrl の値が無効です。http または https の絶対URLを指定してください。");
+            }
+
+            return OllamaEndpointResolution.Success(settingsAddress);
         }
 
         return OllamaEndpointResolution.Success(DefaultBaseAddress);
