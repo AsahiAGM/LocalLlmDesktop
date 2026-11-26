@@ -346,4 +346,54 @@ public class UserSettingsStoreTests
 
         Assert.Equal(expected, result);
     }
+
+        [Fact]
+    public void BuildSettingsPath_returns_home_config_path_when_xdg_config_home_is_empty()
+    {
+        // Arrange
+        var localAppData = "/unused";
+        string? xdgConfigHome = "";
+        var home = "/home/test";
+
+        // Act
+        var result = UserSettingsStore.BuildSettingsPath(
+            windows: false,
+            localAppData: localAppData,
+            xdgConfigHome: xdgConfigHome,
+            home: home);
+
+        // Assert
+        var expected = Path.Combine(
+            home,
+            ".config",
+            "LocalLlmDesktop",
+            "settings.json");
+
+        Assert.Equal(expected, result);
+    }
+
+    [Fact]
+    public void BuildSettingsPath_returns_home_config_path_when_xdg_config_home_is_whitespace()
+    {
+        // Arrange
+        var localAppData = "/unused";
+        string? xdgConfigHome = "   ";
+        var home = "/home/test";
+
+        // Act
+        var result = UserSettingsStore.BuildSettingsPath(
+            windows: false,
+            localAppData: localAppData,
+            xdgConfigHome: xdgConfigHome,
+            home: home);
+
+        // Assert
+        var expected = Path.Combine(
+            home,
+            ".config",
+            "LocalLlmDesktop",
+            "settings.json");
+
+        Assert.Equal(expected, result);
+    }
 }
