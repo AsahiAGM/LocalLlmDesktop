@@ -25,7 +25,7 @@ public partial class App : Application
         {
             _httpClient = new HttpClient
             {
-                BaseAddress = new Uri("http://172.27.192.1:11434/")
+                BaseAddress = new Uri("http://127.0.0.1:11434/")
             };
 
             IChatService chatService = new OllamaService(_httpClient);
