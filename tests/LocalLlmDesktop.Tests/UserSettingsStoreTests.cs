@@ -100,4 +100,36 @@ public class UserSettingsStoreTests
         }
     }
 
+        [Fact]
+    public void Load_returns_error_when_file_is_empty()
+    {
+        // Arrange
+        var tempDirectory = Path.Combine(
+            Path.GetTempPath(),
+            Guid.NewGuid().ToString());
+
+        Directory.CreateDirectory(tempDirectory);
+
+        var settingsPath = Path.Combine(tempDirectory, "settings.json");
+
+        try
+        {
+            File.WriteAllText(settingsPath, "");
+
+            var store = new UserSettingsStore(settingsPath);
+
+            // Act
+            var result = store.Load();
+
+            // Assert
+            Assert.True(result.Exists);
+            Assert.Null(result.OllamaBaseUrl);
+            Assert.NotNull(result.Error);
+            Assert.Contains("JSONを読み取れません", result.Error);
+        }
+        finally
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+    }
 }
