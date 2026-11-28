@@ -485,18 +485,8 @@ Warningは設定上の問題を通知するものであり、接続先の解決�
 
 ```powershell
 dotnet test .\tests\LocalLlmDesktop.Tests\LocalLlmDesktop.Tests.csproj
-
-
+```
 ---
-
-## 次の作業
-
-1. 上記を `docs/development_log.md` の末尾に追記。
-2. 内容を確認。
-3. `ai_driven_dev` ブランチへコミット・Push。
-
-なお、現時点ではGitHubへのPushは行っていません。
-
 **一点、記録上の注意があります。** 環境変数の有効URLテストは通信成功していますが、デフォルトURLと同じloopback環境を使ったため、環境変数が採用されたことを通信先から独立して識別できたわけではありません。開発ログにもその制約を残しています。
 
 STEP15は、実装・単体テスト・実環境検証の一連の作業を完了した段階です。
