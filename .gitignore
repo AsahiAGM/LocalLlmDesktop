@@ -15,3 +15,11 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local speech recognition models and test audio
+/STT_Models/
+
+# Whisper runtime probe build artifacts
+/tools/WhisperRuntimeProbe/bin/
+/tools/WhisperRuntimeProbe/obj/
+
