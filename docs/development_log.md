@@ -491,6 +491,11 @@ dotnet test .\tests\LocalLlmDesktop.Tests\LocalLlmDesktop.Tests.csproj
 
 STEP15は、実装・単体テスト・実環境検証の一連の作業を完了した段階です。
 
+
+
+
+
+
 ## 更新履歴
 
 | 日付 | 内容 |
