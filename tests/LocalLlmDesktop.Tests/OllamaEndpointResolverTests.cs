@@ -86,6 +86,22 @@ public class OllamaEndpointResolverTests
         Assert.Contains("環境変数 LOCALLLM_OLLAMA_BASE_URL", resolution.Error);
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Resolve_does_not_fall_back_when_the_environment_value_is_empty(string raw)
+    {
+        var resolution = OllamaEndpointResolver.Resolve(
+            [],
+            raw,
+            UserSettingsLoadResult.Loaded("http://127.0.0.1:11434/"));
+
+        Assert.False(resolution.IsSuccess);
+        Assert.Null(resolution.BaseAddress);
+        Assert.NotNull(resolution.Error);
+        Assert.Contains("環境変数 LOCALLLM_OLLAMA_BASE_URL", resolution.Error);
+    }
+
     [Fact]
     public void Resolve_rejects_a_missing_argument_value()
     {

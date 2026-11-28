@@ -350,6 +350,156 @@ dotnet test .\tests\LocalLlmDesktop.Tests\LocalLlmDesktop.Tests.csproj
 6. 残課題と未確認事項の整理。
 
 ---
+## 2026-11-27：STEP15 接続設定のUI統合・単体テスト・実環境検証
+
+### 1. 実施目的
+
+STEP14で実装したOllama接続先Resolverについて、アプリケーションUIへのWarning伝播、ViewModelの状態管理、実環境での接続動作を検証する。
+
+また、設定元ごとの優先順位と異常系の挙動を、単体テストおよび実環境テストによって確認する。
+
+### 2. 実施内容
+
+#### 2.1 WarningのUI伝播（STEP15-A）
+
+設定ファイルに問題があった場合のWarningを、アプリケーションのUIに表示できるようにした。
+
+- App.axaml.csからWarningをMainViewModelへ渡す。
+- MainViewModelにConfigurationWarningプロパティを追加。
+- WarningはErrorと独立して管理する。
+- Warningが存在してもチャット送信を禁止しない。
+- Errorが存在する場合は従来どおりチャット送信を禁止する。
+
+不正なURLを設定ファイルに指定し、Warning表示とデフォルトURLへのフォールバックを確認した。
+
+Warning表示中でもチャット送信が成功することを確認した。
+
+#### 2.2 ViewModel単体テスト（STEP15-B）
+
+MainViewModelTests.csを追加し、以下を検証した。
+
+- Warningが正しく保持されること。
+- null・空文字・空白文字がnullに正規化されること。
+- Warningが存在してもチャット送信可能であること。
+- Errorが存在する場合はチャット送信不可であること。
+
+#### 2.3 送信後のWarning維持（STEP15-C）
+
+チャット送信成功後もConfigurationWarningが維持されることをテストで確認した。
+
+StubChatServiceを使用し、実際のHTTP通信に依存しない形で検証した。
+
+#### 2.4 統合レビュー（STEP15-D）
+
+GitHub上の実装を対象に統合レビューを実施した。
+
+レビュー結果：
+
+- Critical：0件
+- Major：0件
+- Minor：2件
+
+Minor指摘：
+
+1. development_log.mdへのSTEP15実施内容の追記が必要。
+2. 環境変数が空文字・空白文字の場合のResolver単体テストが不足。
+
+2についてはSTEP15-Fでテストを追加し、対応を完了した。
+
+#### 2.5 実環境テスト（STEP15-E）
+
+Windows環境で、Ollamaとの実際のHTTP通信を使用して検証した。
+
+主な確認結果：
+
+| 検証項目 | 結果 |
+|---|---|
+| デフォルトURLによる起動・通信 | 成功 |
+| 設定ファイルの有効URL | 成功 |
+| 設定ファイルの不正URL | Warning表示、デフォルトへフォールバック、通信成功 |
+| 環境変数の有効URL | 起動・通信成功 |
+| 環境変数の不正URL | Error表示、送信不可 |
+| 起動引数の有効URL | 成功 |
+| 起動引数と不正な設定ファイルの組み合わせ | Warningなし、通信成功 |
+| 起動引数の不正URL | Error表示、送信不可 |
+| 通常設定への復帰 | 成功 |
+
+設定ファイルの有効URLと起動引数の有効URLの検証では、Windowsのnetsh interface portproxyを使用し、デフォルトとは異なるポート11435経由でOllamaへ接続した。
+
+これにより、指定した接続先が実際に採用されていることを確認した。
+
+検証終了後は以下を実施した。
+
+- テスト用settings.jsonを削除。
+- 追加したportproxyルールを削除。
+- 環境変数を解除。
+- 通常起動・チャット通信が正常に動作することを再確認。
+
+#### 2.6 環境変数の空文字・空白テスト（STEP15-F）
+
+OllamaEndpointResolverTests.csにTheoryテストを追加した。
+
+検証対象：
+
+- 環境変数が空文字の場合
+- 環境変数が空白文字のみの場合
+
+いずれも設定済みの不正値としてErrorになり、設定ファイルへフォールバックしないことを確認した。
+
+Resolver本体の実装変更は行っていない。
+
+### 3. 変更ファイル
+
+| ファイル | 変更内容 |
+|---|---|
+| App.axaml.cs | WarningをMainViewModelへ伝播 |
+| ViewModels/MainViewModel.cs | ConfigurationWarningの追加、WarningとErrorの独立管理 |
+| tests/LocalLlmDesktop.Tests/MainViewModelTests.cs | ViewModelのWarning・Error・送信動作テスト |
+| tests/LocalLlmDesktop.Tests/OllamaEndpointResolverTests.cs | 環境変数の空文字・空白テストを追加 |
+
+### 4. 設計上の判断
+
+#### 4.1 ErrorとWarningを独立して管理
+
+設定ファイルの問題はWarningとして扱い、デフォルトURLでアプリケーションの利用を継続できるようにした。
+
+一方、起動引数・環境変数の不正値はErrorとして扱い、下位設定へのフォールバックを禁止する。
+
+#### 4.2 Warningはチャット機能を停止させない
+
+Warningは設定上の問題を通知するものであり、接続先の解決自体は成功している。
+
+そのため、Warningの存在だけを理由にチャット送信を禁止しない。
+
+#### 4.3 設定元の優先順位を維持
+
+起動引数、環境変数、設定ファイル、デフォルト値の順序を維持する。
+
+上位設定が有効な場合、下位設定の問題は評価対象としない。
+
+### 5. テスト結果
+
+#### dotnet test
+
+実行コマンド：
+
+```powershell
+dotnet test .\tests\LocalLlmDesktop.Tests\LocalLlmDesktop.Tests.csproj
+
+
+---
+
+## 次の作業
+
+1. 上記を `docs/development_log.md` の末尾に追記。
+2. 内容を確認。
+3. `ai_driven_dev` ブランチへコミット・Push。
+
+なお、現時点ではGitHubへのPushは行っていません。
+
+**一点、記録上の注意があります。** 環境変数の有効URLテストは通信成功していますが、デフォルトURLと同じloopback環境を使ったため、環境変数が採用されたことを通信先から独立して識別できたわけではありません。開発ログにもその制約を残しています。
+
+STEP15は、実装・単体テスト・実環境検証の一連の作業を完了した段階です。
 
 ## 更新履歴
 
@@ -357,3 +507,4 @@ dotnet test .\tests\LocalLlmDesktop.Tests\LocalLlmDesktop.Tests.csproj
 |---|---|
 | 2026-11-26 | Ollama接続先の外部設定化、Resolver実装、単体テスト環境整備、15件のテスト成功を記録 |
 | 2026-11-26 | STEP14完了：Ollama接続先ResolverのWarning対応、異常系テスト拡充、単体テスト35件成功 |
+| 2026-11-27 | STEP15完了：WarningのUI統合、ViewModelテスト、実環境検証、単体テスト44件成功 |
